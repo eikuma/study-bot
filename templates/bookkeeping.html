@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chatbot</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" type="text/css" href="../static/css/style.css" />
+    <script
+      defer
+      src="https://use.fontawesome.com/releases/v6.4.2/js/all.js"
+    ></script>
+  </head>
+  <body>
+    <div class="nav">
+      <a href="/">
+        <h2>キャラクターと資格勉強</h2>
+      </a>
+      <p>ゆりなさん</p>
+    </div>
+    <div class="container">
+      <div class="character">
+        <div class="chara-top">
+          <div class="character-name">
+            <h3>さくら</h3>
+          </div>
+          <div class="ranking-btn">
+            <label for="pop-up" class="open"
+              ><i class="fa-solid fa-ranking-star"></i
+            ></label>
+            <input type="checkbox" id="pop-up" />
+            <div class="overlay">
+              <div class="ranking-window">
+                <label class="close" for="pop-up"
+                  ><i class="fa-solid fa-xmark"></i
+                ></label>
+                <h3>勉強仲間の育成状況</h3>
+                <div class="row ranking-list">
+                  <div class="ranking-img-wrap col-3">
+                    <img src="../static/img/levelup.png" alt="" />
+                  </div>
+                  <div class="col-9">
+                    <h4>1位：Aさん</h4>
+                    <p>学習時間：〇〇時間〇〇分〇〇秒</p>
+                  </div>
+                </div>
+                <div class="row ranking-list">
+                  <div class="ranking-img-wrap col-3">
+                    <img src="../static/img/levelup.png" alt="" />
+                  </div>
+                  <div class="col-9">
+                    <h4>2位：Bさん</h4>
+                    <p>学習時間：〇〇時間〇〇分〇〇秒</p>
+                  </div>
+                </div>
+                <div class="row ranking-list">
+                  <div class="ranking-img-wrap col-3">
+                    <img src="../static/img/levelup.png" alt="" />
+                  </div>
+                  <div class="col-9">
+                    <h4>3位：Cさん</h4>
+                    <p>学習時間：〇〇時間〇〇分〇〇秒</p>
+                  </div>
+                </div>
+                <div class="row ranking-list">
+                  <div class="ranking-img-wrap col-3">
+                    <img src="../static/img/levelup.png" alt="" />
+                  </div>
+                  <div class="col-9">
+                    <h4>4位：Dさん</h4>
+                    <p>学習時間：〇〇時間〇〇分〇〇秒</p>
+                  </div>
+                </div>
+                <div class="row ranking-list">
+                  <div class="ranking-img-wrap col-3">
+                    <img src="../static/img/levelup.png" alt="" />
+                  </div>
+                  <div class="col-9">
+                    <h4>5位：Eさん</h4>
+                    <p>学習時間：〇〇時間〇〇分〇〇秒</p>
+                  </div>
+                </div>
+                <div class="row ranking-list">
+                  <div class="ranking-img-wrap col-3">
+                    <img src="../static/img/levelup.png" alt="" />
+                  </div>
+                  <div class="col-9">
+                    <h4>6位：Fさん</h4>
+                    <p>学習時間：〇〇時間〇〇分〇〇秒</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="zoomIn shake">
+            <img src="../static/img/簿記-removebg-preview.png" alt="" />
+          </div>
+        </div>
+        <div class="timer-container">
+          <div id="study-button-container">
+            <button id="start-study-button" class="btn">勉強を始める</button>
+          </div>
+          <div id="timer-container" style="display: none">
+            <div id="stopwatch">00:00:00</div>
+            <button id="end-study-button" class="btn">勉強を終わる</button>
+          </div>
+        </div>
+      </div>
+      <div id="chat-container">
+        <div id="chat-display"></div>
+        <div id="user-input">
+          <input type="text" id="user-text" placeholder="話しかける" />
+          <button id="send-button">送る</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      //   チャット欄
+      const chatDisplay = document.getElementById("chat-display");
+      const userText = document.getElementById("user-text");
+      const sendButton = document.getElementById("send-button");
+      const maxMessagePairs = 2; // 表示する最大ペア数
+      let messagePairs = []; // 質問とレスポンスのペアを格納
+
+      sendButton.addEventListener("click", () => {
+        const userInput = userText.value;
+        if (userInput.trim() !== "") {
+          const userMessage = `<div class="message user">私：${userInput}</div>`;
+          chatDisplay.innerHTML += userMessage;
+          userText.value = "";
+
+          fetch("/get_response", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `user_input=${userInput}`,
+          })
+            .then((response) => response.text())
+            .then((data) => {
+              const botMessage = `<div class="message bot">${data}</div>`;
+              chatDisplay.innerHTML += botMessage;
+
+              // 質問とレスポンスのペアを追加
+              messagePairs.push({ question: userInput, response: data });
+
+              // メッセージペアがmaxMessagePairsを超える場合、古いペアを削除
+              if (messagePairs.length > maxMessagePairs) {
+                const removedPair = messagePairs.shift();
+                // 削除される質問と回答を削除
+                const removedQuestion = removedPair.question;
+                const removedResponse = removedPair.response;
+                const messages = chatDisplay.getElementsByClassName("message");
+                for (let i = messages.length - 1; i >= 0; i--) {
+                  if (
+                    messages[i].innerHTML.includes(removedQuestion) ||
+                    messages[i].innerHTML.includes(removedResponse)
+                  ) {
+                    messages[i].remove();
+                  }
+                }
+              }
+            });
+        }
+      });
+
+      //   ストップウォッチ
+      const startStudyButton = document.getElementById("start-study-button");
+      const timerContainer = document.getElementById("timer-container");
+      const stopwatchDisplay = document.getElementById("stopwatch");
+      const endStudyButton = document.getElementById("end-study-button");
+      let startTime, timerInterval;
+
+      startStudyButton.addEventListener("click", () => {
+        startStudyButton.style.display = "none";
+        timerContainer.style.display = "flex";
+        startTime = new Date().getTime();
+        timerInterval = setInterval(updateStopwatch, 1000);
+
+        const userInput = "勉強を始めます！";
+        const userMessage = `<div class="message user">私：${userInput}</div>`;
+        chatDisplay.innerHTML += userMessage;
+        userText.value = "";
+
+        fetch("/get_response", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: `user_input=${userInput}`,
+        })
+          .then((response) => response.text())
+          .then((data) => {
+            const botMessage = `<div class="message bot">${data}</div>`;
+            chatDisplay.innerHTML += botMessage;
+
+            // 質問とレスポンスのペアを追加
+            messagePairs.push({ question: userInput, response: data });
+
+            // メッセージペアがmaxMessagePairsを超える場合、古いペアを削除
+            if (messagePairs.length > maxMessagePairs) {
+              const removedPair = messagePairs.shift();
+              // 削除される質問と回答を削除
+              const removedQuestion = removedPair.question;
+              const removedResponse = removedPair.response;
+              const messages = chatDisplay.getElementsByClassName("message");
+              for (let i = messages.length - 1; i >= 0; i--) {
+                if (
+                  messages[i].innerHTML.includes(removedQuestion) ||
+                  messages[i].innerHTML.includes(removedResponse)
+                ) {
+                  messages[i].remove();
+                }
+              }
+            }
+          });
+      });
+
+      endStudyButton.addEventListener("click", () => {
+        clearInterval(timerInterval);
+        timerContainer.style.display = "none";
+        startStudyButton.style.display = "block";
+
+        // タイムを取得してバックエンドに送信
+        const currentTime = stopwatchDisplay.textContent.split(":");
+        const userInput =
+          currentTime[0] +
+          "時間" +
+          currentTime[1] +
+          "分" +
+          currentTime[2] +
+          "秒" +
+          "勉強しました！";
+        const userMessage = `<div class="message user">私：${userInput}</div>`;
+        chatDisplay.innerHTML += userMessage;
+        userText.value = "";
+
+        fetch("/get_response", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: `user_input=${userInput}`,
+        })
+          .then((response) => response.text())
+          .then((data) => {
+            const botMessage = `<div class="message bot">${data}</div>`;
+            chatDisplay.innerHTML += botMessage;
+
+            // 質問とレスポンスのペアを追加
+            messagePairs.push({ question: userInput, response: data });
+
+            // メッセージペアがmaxMessagePairsを超える場合、古いペアを削除
+            if (messagePairs.length > maxMessagePairs) {
+              const removedPair = messagePairs.shift();
+              // 削除される質問と回答を削除
+              const removedQuestion = removedPair.question;
+              const removedResponse = removedPair.response;
+              const messages = chatDisplay.getElementsByClassName("message");
+              for (let i = messages.length - 1; i >= 0; i--) {
+                if (
+                  messages[i].innerHTML.includes(removedQuestion) ||
+                  messages[i].innerHTML.includes(removedResponse)
+                ) {
+                  messages[i].remove();
+                }
+              }
+            }
+          });
+
+        stopwatchDisplay.textContent = "00:00:00";
+      });
+
+      function updateStopwatch() {
+        const currentTime = new Date().getTime();
+        const elapsedTime = currentTime - startTime;
+        const seconds = Math.floor(elapsedTime / 1000);
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = seconds % 60;
+        const formattedTime = `${hours.toString().padStart(2, "0")}:${minutes
+          .toString()
+          .padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+        stopwatchDisplay.textContent = formattedTime;
+      }
+    </script>
+  </body>
+</html>
